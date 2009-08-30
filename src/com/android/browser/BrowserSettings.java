@@ -75,6 +75,8 @@ class BrowserSettings extends Observable {
     private boolean onscreenZoom = false;
     private boolean menuZoom = true;
     private String mobileVersion = "Android";
+    private boolean lockLandscape = false;
+    private boolean fullScreen = false;
 
     // Development settings
     public WebSettings.LayoutAlgorithm layoutAlgorithm =
@@ -148,6 +150,17 @@ class BrowserSettings extends Observable {
 
         public void update(Observable o, Object arg) {
             BrowserSettings b = (BrowserSettings)o;
+	    
+	   /* if (b.lockLandscape())
+	    {
+		this.getActivity().setRequestedOrientation(0); // lock in landscape
+	    }
+	    else
+	    {
+		this.getActivity().setRequestedOrientation(4); // orient by sensor
+	    } */
+
+
             WebSettings s = mSettings;
 
 	    Log.d("browser","PN: onscreen zoom - "+b.onscreenZoom);
@@ -238,6 +251,8 @@ class BrowserSettings extends Observable {
         loadsImagesAutomatically = p.getBoolean("load_images",
                 loadsImagesAutomatically);
         onscreenZoom = p.getBoolean("onscreen_zoom", onscreenZoom);
+	lockLandscape = p.getBoolean("lock_landscape",lockLandscape);
+	fullScreen = p.getBoolean("full_screen",fullScreen);
 	menuZoom = p.getBoolean("menu_zoom",menuZoom);
         javaScriptEnabled = p.getBoolean("enable_javascript",
                 javaScriptEnabled);
@@ -343,6 +358,10 @@ class BrowserSettings extends Observable {
 	return onscreenZoom;
     }
 
+    public boolean fullScreen() {
+	return fullScreen;
+    }
+
     public boolean menuZoomEnabled() {
 	return menuZoom;
     }
@@ -377,6 +396,10 @@ class BrowserSettings extends Observable {
 
     public boolean isLightTouch() {
         return lightTouch;
+    }
+
+    public boolean lockLandscape() {
+	return lockLandscape;
     }
 
     public boolean isNavDump() {

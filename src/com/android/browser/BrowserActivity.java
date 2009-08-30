@@ -636,8 +636,17 @@ public class BrowserActivity extends Activity
             Log.v(LOGTAG, this + " onStart");
         }
         super.onCreate(icicle);
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
-//                WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+
+        // Keep a settings instance handy.
+        mSettings = BrowserSettings.getInstance();
+        mSettings.setTabControl(mTabControl);
+        mSettings.loadFromDb(this);
+
+	if (mSettings.fullScreen())
+	{
+	        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+                  WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+	}
 	//this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.requestWindowFeature(Window.FEATURE_LEFT_ICON);
         this.requestWindowFeature(Window.FEATURE_RIGHT_ICON);
@@ -680,10 +689,10 @@ public class BrowserActivity extends Activity
         // Open the icon database and retain all the bookmark urls for favicons
         retainIconsOnStartup();
 
-        // Keep a settings instance handy.
+ /*       // Keep a settings instance handy.
         mSettings = BrowserSettings.getInstance();
         mSettings.setTabControl(mTabControl);
-        mSettings.loadFromDb(this);
+        mSettings.loadFromDb(this); */
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Browser");
@@ -1174,6 +1183,15 @@ public class BrowserActivity extends Activity
     }
 
     private boolean resumeWebView() {
+	Log.d("PN","Resume web view");
+	if (mSettings.lockLandscape())
+	{
+		this.setRequestedOrientation(0); // lock in landscape
+	}
+	else
+	{
+		this.setRequestedOrientation(4); // orient by sensor
+	}
         if ((!mActivityInPause && !mPageStarted) ||
                 (mActivityInPause && mPageStarted)) {
             CookieSyncManager.getInstance().startSync();

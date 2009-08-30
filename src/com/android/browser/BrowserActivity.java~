@@ -637,7 +637,7 @@ public class BrowserActivity extends Activity
         }
         super.onCreate(icicle);
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
-                WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN); 
 	//this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.requestWindowFeature(Window.FEATURE_LEFT_ICON);
         this.requestWindowFeature(Window.FEATURE_RIGHT_ICON);
@@ -1174,6 +1174,15 @@ public class BrowserActivity extends Activity
     }
 
     private boolean resumeWebView() {
+	Log.d("PN","Resume web view");
+	if (mSettings.lockLandscape())
+	{
+		this.setRequestedOrientation(0); // lock in landscape
+	}
+	else
+	{
+		this.setRequestedOrientation(4); // orient by sensor
+	}
         if ((!mActivityInPause && !mPageStarted) ||
                 (mActivityInPause && mPageStarted)) {
             CookieSyncManager.getInstance().startSync();
