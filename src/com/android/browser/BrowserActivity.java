@@ -4878,7 +4878,7 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 	singleTapDetected = false;
 	Log.d("PN","double tap. Woot");
 	
-	new CountDownTimer(250, 50) {
+	new CountDownTimer(500, 50) {
 		public void onTick(long millisUntilFinished) { /* do nothing */ }
 		public void onFinish() 
 		{
