@@ -65,6 +65,7 @@ import android.net.http.SslCertificate;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Debug;
 import android.os.Environment;
 import android.os.Handler;
@@ -163,6 +164,9 @@ public class BrowserActivity extends Activity
     private SensorManager mSensorManager = null;
     private MultiTouchController mMultiTouchController;
     private GestureDetector mGestureDetector;
+
+    private boolean singleTapDetected = false;
+    private boolean tripleTapDetected = false;
 
 
     /* Whitelisted webpages
@@ -636,8 +640,17 @@ public class BrowserActivity extends Activity
             Log.v(LOGTAG, this + " onStart");
         }
         super.onCreate(icicle);
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
-//                WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+
+        // Keep a settings instance handy.
+        mSettings = BrowserSettings.getInstance();
+        mSettings.setTabControl(mTabControl);
+        mSettings.loadFromDb(this);
+
+	if (mSettings.fullScreen())
+	{
+	        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+                  WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+	}
 	//this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.requestWindowFeature(Window.FEATURE_LEFT_ICON);
         this.requestWindowFeature(Window.FEATURE_RIGHT_ICON);
@@ -680,10 +693,10 @@ public class BrowserActivity extends Activity
         // Open the icon database and retain all the bookmark urls for favicons
         retainIconsOnStartup();
 
-        // Keep a settings instance handy.
+ /*       // Keep a settings instance handy.
         mSettings = BrowserSettings.getInstance();
         mSettings.setTabControl(mTabControl);
-        mSettings.loadFromDb(this);
+        mSettings.loadFromDb(this); */
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Browser");
@@ -1181,7 +1194,7 @@ public class BrowserActivity extends Activity
 	}
 	else
 	{
-		this.setRequestedOrientation(4); // orient by sensor
+		this.setRequestedOrientation(-1); // orient by user setting in OS
 	}
         if ((!mActivityInPause && !mPageStarted) ||
                 (mActivityInPause && mPageStarted)) {
@@ -4830,12 +4843,12 @@ public class BrowserActivity extends Activity
     final static String GOOGLE_SEARCH_SOURCE_UNKNOWN = "unknown";
 
 class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
-/*    @Override
-    public boolean onSingleTapUp(MotionEvent ev) {
-        Log.d("onSingleTapUp",ev.toString());
-        return true;
-    }
     @Override
+    public boolean onSingleTapUp(MotionEvent ev) {
+	singleTapDetected = true;
+        return super.onSingleTapUp(ev);
+    }
+/*    @Override
     public void onShowPress(MotionEvent ev) {
         Log.d("onShowPress",ev.toString());
     }
@@ -4862,55 +4875,54 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
     @Override */
     public boolean onDoubleTap(MotionEvent ev)
     {
+	singleTapDetected = false;
 	Log.d("PN","double tap. Woot");
-        TabControl.Tab currentTab = mTabControl.getCurrentTab();
-        WebView webView = currentTab.getWebView();
-
-	/*
-
-        while (mCurrZoom > targetZoom) {
-            mCurrZoom--;
-            zoomOk = webView.zoomOut();
-            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
-                Toast.makeText(this, "Cannot zoom out", Toast.LENGTH_SHORT).show();
-                mPoppedUpCannotZoomDialog = true;
-            }
-        }
-        while (mCurrZoom < targetZoom) {
-            mCurrZoom++;
-            zoomOk = webView.zoomIn();
-            if (!zoomOk && !mPoppedUpCannotZoomDialog) {
-                Toast.makeText(this, "Cannot zoom in", Toast.LENGTH_SHORT).show();
-                mPoppedUpCannotZoomDialog = true;
-            }
-        } */
-
-	Log.d("PN","getScale pre: "+webView.getScale());
-	if (webView.getScale() < 1)
-	{
-		while (webView.getScale() < 1)
-		{
-			webView.zoomIn();
-		}
-		return true;
-	}
 	
-	// at zoom level 1 just do single hops 
-	if (webView.getScale() <= 1.5)
-	{
-		webView.zoomIn();
-		return true;
-	}
-	else
-	{	// until it's more than 150% view, so we zoom out to 0.7
-		while (webView.getScale() > 0.7)
+	new CountDownTimer(100, 50) {
+		public void onTick(long millisUntilFinished) { /* do nothing */ }
+		public void onFinish() 
 		{
-			webView.zoomOut();
-		}
-		return true;
-	}
+			
+			TabControl.Tab currentTab = mTabControl.getCurrentTab();
+        		WebView webView = currentTab.getWebView();			
 
-	//return true;
+  			if (singleTapDetected) // tripletap!
+			{
+				Log.d("PN","triple tap! Double-woot");
+				singleTapDetected = false;
+				tripleTapDetected = true;
+				webView.zoomOut();
+			}
+			else // doubletap
+			{
+				Log.d("PN","getScale pre: "+webView.getScale());
+				if (webView.getScale() < 1)
+				{
+					while (webView.getScale() < 0.76)
+					{
+						webView.zoomIn();
+					}
+				}
+				// at zoom level 1 just do single hops 
+				if (webView.getScale() <= 1.4)
+				{
+					webView.zoomIn();
+				}
+				else
+				{	// until it's more than 150% view, so we zoom out to 0.7
+					while (webView.getScale() > 0.5)
+					{			
+						// a quick kludge to make sure we don't get into an infinite loop
+						// on pages that won't zoom lower than 1 
+						if(!(webView.zoomOut())) { /* do nothing, just keep zooming */ }
+					}
+				}
+
+			}
+   		}
+  	}.start();
+
+	return true;
     }
 }
 
