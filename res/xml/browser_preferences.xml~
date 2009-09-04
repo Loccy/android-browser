@@ -51,7 +51,7 @@
                 android:title="Double tap action"
                 android:defaultValue="Zoom cycle"
                 android:entries="@array/pref_double_tap_action"
-                android:entryValues="@array/double_tap_action"
+                android:entryValues="@array/pref_double_tap_action"
 		android:summary="Choose the action that occurs upon double-tap"
                 android:dialogTitle="Choose action" />
 
