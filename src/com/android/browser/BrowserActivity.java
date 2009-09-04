@@ -23,6 +23,7 @@ import com.google.android.providers.GoogleSettings.Partner;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.ActivityNotFoundException;
@@ -98,6 +99,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.View.OnClickListener;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -4260,6 +4262,24 @@ public class BrowserActivity extends Activity
         }
     }
 
+    private void promptToQuit() {
+
+          AlertDialog.Builder builder = new AlertDialog.Builder(this); 
+          builder.setTitle("Exit Browser"); 
+          //builder.setIcon(R.drawable.beer); 
+          builder.setMessage("Are you sure you want to quit?"); 
+          builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+ 			Log.d("PN","you confirmed quit");
+			BrowserActivity.this.finish();
+                    }
+                }); 
+
+          builder.setNegativeButton("Cancel", null); 
+          builder.show(); 
+
+}
+
     /**
      * Set HTTP authentication password.
      *
@@ -4853,7 +4873,15 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
                 TabControl.Tab current = mTabControl.getCurrentTab();
                 if (current != null) {
                     dismissSubWindow(current);
-                    current.getWebView().loadUrl(mSettings.getHomePage());
+		    if (current.getWebView().getUrl().equals(mSettings.getHomePage()))
+		    {
+			Log.d("PN","we're already on the home page");
+			promptToQuit();			
+		    }
+		    else
+		    {
+                    	current.getWebView().loadUrl(mSettings.getHomePage());
+		    }
                 }
 		return true;
 	}
@@ -4900,6 +4928,11 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 	singleTapDetected = false;
 	Log.d("PN","double tap. Woot");
 	
+	// stop any loading activity on current webview
+	TabControl.Tab currentTab = mTabControl.getCurrentTab();
+        WebView webView = currentTab.getWebView();	
+	webView.stopLoading();
+
 	new CountDownTimer(mSettings.tripleTapDelay(), 50) {
 		public void onTick(long millisUntilFinished) { /* do nothing */ }
 		public void onFinish() 
@@ -4909,7 +4942,9 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
         		WebView webView = currentTab.getWebView();			
 
   			if (singleTapDetected) // tripletap!
-			{
+			{	
+				// stop any loading activity on current webview	
+				webView.stopLoading();
 				Log.d("PN","triple tap! Double-woot");
 				singleTapDetected = false;
 				tripleTapDetected = true;
@@ -4969,6 +5004,8 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
     private final static int WAKELOCK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
     private Toast mStopToast;
+	
+    private BrowserActivity theDaddy = this;
 
     // Used during animations to prevent other animations from being triggered.
     // A count is used since the animation to and from the Window overview can
