@@ -170,6 +170,8 @@ public class BrowserActivity extends Activity
     private boolean singleTapDetected = false;
     private boolean tripleTapDetected = false;
 
+    private Configuration mConfig = null;
+
 
     /* Whitelisted webpages
     private static HashSet<String> sWhiteList;
@@ -1145,6 +1147,8 @@ public class BrowserActivity extends Activity
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
+	mConfig = newConfig;
+
         if (mPageInfoDialog != null) {
             mPageInfoDialog.dismiss();
             showPageInfo(
@@ -1453,6 +1457,10 @@ public class BrowserActivity extends Activity
 		TabControl.Tab currentTab = mTabControl.getCurrentTab();
         	WebView webView = currentTab.getWebView();
 		int currentScalePercent = Math.round(webView.getScale() * 100);
+		if (currentScalePercent == 100)
+		{
+			currentScalePercent = 0;
+		}
 		webView.setInitialScale(currentScalePercent);	
                 bookmarksOrHistoryPicker(false);
                 break;
@@ -2872,9 +2880,29 @@ public class BrowserActivity extends Activity
         setFavicon(icon);
     }
 
-    private final WebViewClient mWebViewClient = new WebViewClient() {
+    private final WebViewClient mWebViewClient = new WebViewClient() {	
+	
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
+	    String origUrl = view.getOriginalUrl();
+	    
+	    String origHost = ""; 
+	    String newHost = "";
+	    
+	    try
+	    {
+	       newHost = new URL(url).getHost();
+	       origHost = new URL(origUrl).getHost();
+	       
+	    } catch (Exception e) { /* will never happen */ }
+
+	    if (!origHost.equals(newHost))
+	    {
+		Log.d("PN","going to another site, brb");
+		view.setInitialScale(0);
+	    }
+
+	    Log.d("PN","Orig: "+origUrl+" New: "+url);
             resetLockIcon(url);
             setUrlTitle(url, null);
             // Call updateIcon instead of setFavicon so the bookmark
@@ -2957,6 +2985,7 @@ public class BrowserActivity extends Activity
             // Reset the title and icon in case we stopped a provisional
             // load.
             resetTitleAndIcon(view);
+	    Log.d("PN","scale = "+view.getScale());
 
             // Update the lock icon image only once we are done loading
             updateLockIconImage(mLockIconType);
@@ -4873,14 +4902,33 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
     
     @Override
     public boolean onSingleTapUp(MotionEvent ev) {
+
+	int currentPos = getResources().getConfiguration().orientation;
+	int topOffset = 0;
+
+	if (!mSettings.fullScreen()) // not fullscreen
+	{
+		topOffset = 25;
+	}	
+
+	int bottom = 480; // portrait
+	if (currentPos == 2)
+	{
+		bottom = 320; // landscape
+	}
+
 	singleTapDetected = true;
 
 	TabControl.Tab currentTab = mTabControl.getCurrentTab();
         WebView webView = currentTab.getWebView();
 	int currentScalePercent = Math.round(webView.getScale() * 100);
+	if (currentScalePercent == 100)
+	{
+		currentScalePercent = 0;
+	}
 	webView.setInitialScale(currentScalePercent);	
 	
-	if ((ev.getY() < 40) && (ev.getX() < 30)) // top left click
+	if ((ev.getY()<(topOffset+40)) && (ev.getX() < 30)) // top left click
 	{
                 TabControl.Tab current = mTabControl.getCurrentTab();
                 if (current != null) {
@@ -4898,7 +4946,7 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 		return true;
 	}
 
-	if ((ev.getY() < 40) && (ev.getX() > 30)) // top (title bar) click
+	if ((ev.getY() < (topOffset+40)) && (ev.getX() > 30)) // top (title bar) click
 	{	
 		String url = getTopWindow().getUrl();
                 startSearch(mSettings.getHomePage().equals(url) ? null : url, true,
@@ -4906,7 +4954,11 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 		singleTapDetected = false;
 		return true; // DON'T run the original
 	}
-	
+
+	if ((ev.getY() > (bottom-30)) && (ev.getX() < 30)) // bottom left corner
+	{
+		Log.d("PN","bottom left corner!");
+	}
 	
         return super.onSingleTapUp(ev);
     }
