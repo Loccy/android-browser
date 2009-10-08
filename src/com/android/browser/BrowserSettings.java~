@@ -379,7 +379,7 @@ class BrowserSettings extends Observable {
     }
 
     public int doubleTapAction() {
-	if (doubleTapAction.equals("Zoom cycle")
+	if (doubleTapAction.equals("Zoom cycle"))
 	{
 		return 0;
 	}	

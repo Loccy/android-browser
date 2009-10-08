@@ -1316,44 +1316,7 @@ public class BrowserActivity extends Activity
         mMenu = menu;
         updateInLoadMenuItems();
 
-	// if onscreen zoom controls are enabled, we can kill the zoom controls
-	// from the menu
-
-	if ( (mSettings.onscreenZoomEnabled()) || (!(mSettings.menuZoomEnabled())) )
-	{
-		killZoomMenuItems();	
-	}
-
         return true;
-    }
-
-    protected void killZoomMenuItems() {
-	Log.d(LOGTAG,"PN: killing zoom menu items");
-	// pull them in to our local vars first
-
-	mMenu.removeItem(R.id.zoom_out_menu_id);
-	mMenu.removeItem(R.id.zoom_in_menu_id);
-    }
-
-    protected void addZoomMenuItems() {
-	if (mSettings.menuZoomEnabled())
-	{
-		Log.d(LOGTAG,"PN: adding zoom menu items");
-		mMenu.clear();
-        	MenuInflater inflater = getMenuInflater();
-        	inflater.inflate(R.menu.browser, mMenu);
-        	mMenu.setGroupVisible(R.id.MAIN_MENU, true);
-        	mMenu.setGroupEnabled(R.id.MAIN_MENU, true);
-        	mMenu.setGroupEnabled(R.id.MAIN_SHORTCUT_MENU, true);
-        	mMenu.setGroupVisible(R.id.TAB_MENU, false);
-        	mMenu.setGroupEnabled(R.id.TAB_MENU, false);
-        	updateInLoadMenuItems();
-       }
-	else
-	{
-		Log.d(LOGTAG,"PN: killing zoom menu items");
-		killZoomMenuItems();
-	}
     }
 
     /**
@@ -2691,18 +2654,6 @@ public class BrowserActivity extends Activity
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             mMenuIsDown = true;
-	    // PN: now sort out menu options
-	    if (mMenu != null)
-	    {
-		if (mSettings.onscreenZoomEnabled())
-		{
-			killZoomMenuItems();
-		}
-		else
-		{
-			addZoomMenuItems();
-		}
-	    }
         }
         boolean handled =  mKeyTracker.doKeyDown(keyCode, event);
         if (!handled) {
@@ -4906,15 +4857,17 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 	int currentPos = getResources().getConfiguration().orientation;
 	int topOffset = 0;
 
-	if (!mSettings.fullScreen()) // not fullscreen
+	if /* NOT */ (!mSettings.fullScreen())
 	{
 		topOffset = 25;
 	}	
 
 	int bottom = 480; // portrait
+	int right = 320; // portrait
 	if (currentPos == 2)
 	{
 		bottom = 320; // landscape
+		right = 480; // landscape
 	}
 
 	singleTapDetected = true;
@@ -4946,8 +4899,9 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 		return true;
 	}
 
-	if ((ev.getY() < (topOffset+40)) && (ev.getX() > 30)) // top (title bar) click
+	if ((ev.getY() < (topOffset+40)) && (ev.getX() > (right-30))) // top right click
 	{	
+		Log.d("PN","top right corner!");
 		String url = getTopWindow().getUrl();
                 startSearch(mSettings.getHomePage().equals(url) ? null : url, true,
                         createGoogleSearchSourceBundle(GOOGLE_SEARCH_SOURCE_GOTO), false);
@@ -4958,8 +4912,23 @@ class LearnGestureListener extends GestureDetector.SimpleOnGestureListener{
 	if ((ev.getY() > (bottom-30)) && (ev.getX() < 30)) // bottom left corner
 	{
 		Log.d("PN","bottom left corner!");
+		int t = mTabControl.getCurrentIndex();
+		if (t != 0)
+		{
+                	switchTabs(t,t-1, false);
+		}
 	}
 	
+	if ((ev.getY() > (bottom-30)) && (ev.getX() > (right-30))) // bottom right corner
+	{
+		Log.d("PN","bottom right corner!");
+		int t = mTabControl.getCurrentIndex();
+		if (t != (mTabControl.getTabCount()-1))
+		{
+                	switchTabs(t,t+1, false);
+		}
+	}
+
         return super.onSingleTapUp(ev);
     }
 /*    @Override

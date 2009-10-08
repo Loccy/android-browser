@@ -75,7 +75,6 @@ class BrowserSettings extends Observable {
     private boolean autoFitPage = true;
     private boolean showDebugSettings = false;
     private boolean onscreenZoom = false;
-    private boolean menuZoom = true;
     private String mobileVersion = "Android";
     private boolean lockLandscape = false;
     private boolean fullScreen = false;
@@ -257,7 +256,6 @@ class BrowserSettings extends Observable {
         onscreenZoom = p.getBoolean("onscreen_zoom", onscreenZoom);
 	lockLandscape = p.getBoolean("lock_landscape",lockLandscape);
 	fullScreen = p.getBoolean("full_screen",fullScreen);
-	menuZoom = p.getBoolean("menu_zoom",menuZoom);
         javaScriptEnabled = p.getBoolean("enable_javascript",
                 javaScriptEnabled);
         pluginsEnabled = p.getBoolean("enable_plugins",
@@ -389,10 +387,6 @@ class BrowserSettings extends Observable {
 
     public boolean fullScreen() {
 	return fullScreen;
-    }
-
-    public boolean menuZoomEnabled() {
-	return menuZoom;
     }
 
     public boolean isLoginInitialized() {

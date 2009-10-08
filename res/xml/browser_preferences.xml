@@ -56,12 +56,6 @@
                 android:dialogTitle="Choose action" />
 
 	<CheckBoxPreference
-		android:key="menu_zoom"
-		android:defaultValue="false"
-		android:title="Zoom buttons in menu"
-		android:summary="Show zoom buttons in menu when visual zoom controls are off" /> 
-
-	<CheckBoxPreference
 		android:key="lock_landscape"
 		android:defaultValue="false"
 		android:title="Lock in landscape"
